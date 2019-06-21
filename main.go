@@ -1,17 +1,67 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"time"
+
+	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type Todo struct {
+	ID    primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title string             `json:"title,omitempty" bson:"title,omitempty"`
+}
+
+var client *mongo.Client
+
+// Creates a new Todo object in the database
+func CreateTodoEndPoint(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("content-type", "application/json")
+
+	var todo Todo
+	json.NewDecoder(req.Body).Decode(&todo)
+
+	collection := client.Database("gotodo").Collection("todos")
+
+	ctx, err := context.WithTimeout(context.Background(), 5*time.Second)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	result, _ := collection.InsertOne(ctx, todo)
+
+	json.NewEncoder(res).Encode(result)
+}
+
 func main() {
-	http.HandleFunc("/", func (w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Welcome to my website!")
-	})
+	fmt.Println("Starting...")
 
-	fs := http.FileServer(http.Dir("pub/"))
-	http.Handle("/pub/", http.StripPrefix("/pub/", fs))
+	// Set client options
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
-	http.ListenAndServe(":80", nil)
+	// Connect to MongoDB
+	client, err := mongo.Connect(context.TODO(), clientOptions)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Check the connection
+	err = client.Ping(context.TODO(), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Connected to MongoDB!")
+
+	router := mux.NewRouter()
+	router.HandleFunc("/", CreateTodoEndPoint).Methods("POST")
+	log.Fatal(http.ListenAndServe(":12345", router))
+
 }
