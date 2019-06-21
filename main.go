@@ -15,8 +15,13 @@ import (
 )
 
 type Todo struct {
-	ID    primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title string             `json:"title,omitempty" bson:"title,omitempty"`
+	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title       string             `json:"title,omitempty" bson:"title,omitempty"`
+	Desc        string             `json:"desc,omitempty" bson:"desc,omitempty"`
+	TimeCreated time.Time          `json:"timecreated,omitempty" bson:"timecreated,omitempty"`
+	Deadline    time.Time          `json:"deadline,omitempty" bson:"deadline,omitempty"`
+	Estimate    int                `json:"estimate,omitempty" bson:"estimate,omitempty"`
+	TimeSpent   int                `json:"timespent,omitempty" bson:"timespent,omitempty"`
 }
 
 var client *mongo.Client
@@ -27,15 +32,12 @@ func CreateTodoEndPoint(res http.ResponseWriter, req *http.Request) {
 
 	var todo Todo
 	json.NewDecoder(req.Body).Decode(&todo)
+	todo.TimeCreated = time.Now()
+	todo.TimeSpent = 0
 
 	collection := client.Database("gotodo").Collection("todos")
 
-	ctx, err := context.WithTimeout(context.Background(), 5*time.Second)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	result, _ := collection.InsertOne(ctx, todo)
+	result, _ := collection.InsertOne(context.TODO(), todo)
 
 	json.NewEncoder(res).Encode(result)
 }
@@ -47,13 +49,10 @@ func main() {
 	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
 
 	// Connect to MongoDB
-	client, err := mongo.Connect(context.TODO(), clientOptions)
-	if err != nil {
-		log.Fatal(err)
-	}
+	client, _ = mongo.Connect(context.TODO(), clientOptions)
 
 	// Check the connection
-	err = client.Ping(context.TODO(), nil)
+	err := client.Ping(context.TODO(), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
