@@ -43,7 +43,7 @@ func CreateTodoEndPoint(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(result)
 }
 
-func GetAllTodos(res http.ResponseWriter, req *http.Request) {
+func GetAllTodosEndPoint(res http.ResponseWriter, req *http.Request) {
 	res.Header().Set("content-type", "application/json")
 
 	var todos []Todo
@@ -71,6 +71,26 @@ func GetAllTodos(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(todos)
 }
 
+func GetTodoEndpoint(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("content-type", "application/json")
+
+	params := mux.Vars(req)
+
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	collection := client.Database("gotodo").Collection("todos")
+
+	var todo Todo
+	err := collection.FindOne(context.TODO(), Todo{ID: id}).Decode(&todo)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+
+	json.NewEncoder(res).Encode(todo)
+}
+
 func main() {
 	fmt.Println("Starting...")
 
@@ -90,7 +110,8 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/todo", CreateTodoEndPoint).Methods("POST")
-	router.HandleFunc("/todo", GetAllTodos).Methods("GET")
+	router.HandleFunc("/todo", GetAllTodosEndPoint).Methods("GET")
+	router.HandleFunc("/todo/{id}", GetTodoEndpoint).Methods("GET")
 	log.Fatal(http.ListenAndServe(":12345", router))
 
 }
