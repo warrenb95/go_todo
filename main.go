@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -42,6 +43,34 @@ func CreateTodoEndPoint(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(result)
 }
 
+func GetAllTodos(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("content-type", "application/json")
+
+	var todos []Todo
+	collection := client.Database("gotodo").Collection("todos")
+
+	cursor, err := collection.Find(context.TODO(), bson.M{})
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+
+	defer cursor.Close(context.TODO())
+
+	for cursor.Next(context.TODO()) {
+		var todo Todo
+		cursor.Decode(&todo)
+		todos = append(todos, todo)
+	}
+	if err := cursor.Err(); err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+	json.NewEncoder(res).Encode(todos)
+}
+
 func main() {
 	fmt.Println("Starting...")
 
@@ -60,7 +89,8 @@ func main() {
 	fmt.Println("Connected to MongoDB!")
 
 	router := mux.NewRouter()
-	router.HandleFunc("/", CreateTodoEndPoint).Methods("POST")
+	router.HandleFunc("/todo", CreateTodoEndPoint).Methods("POST")
+	router.HandleFunc("/todo", GetAllTodos).Methods("GET")
 	log.Fatal(http.ListenAndServe(":12345", router))
 
 }
