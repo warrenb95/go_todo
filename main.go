@@ -21,8 +21,8 @@ type Todo struct {
 	Desc        string             `json:"desc,omitempty" bson:"desc,omitempty"`
 	TimeCreated time.Time          `json:"timecreated,omitempty" bson:"timecreated,omitempty"`
 	Deadline    time.Time          `json:"deadline,omitempty" bson:"deadline,omitempty"`
-	Estimate    int                `json:"estimate,omitempty" bson:"estimate,omitempty"`
-	TimeSpent   int                `json:"timespent,omitempty" bson:"timespent,omitempty"`
+	Estimate    int64              `json:"estimate,omitempty" bson:"estimate,omitempty"`
+	TimeSpent   int64              `json:"timespent,omitempty" bson:"timespent,omitempty"`
 }
 
 var client *mongo.Client
@@ -91,6 +91,46 @@ func GetTodoEndpoint(res http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(res).Encode(todo)
 }
 
+func DeleteTodoEndPoint(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("content-type", "application/json")
+
+	params := mux.Vars(req)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	collection := client.Database("gotodo").Collection("todos")
+
+	var todo Todo
+	err := collection.FindOneAndDelete(context.TODO(), Todo{ID: id}).Decode(&todo)
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+
+	json.NewEncoder(res).Encode(todo)
+}
+
+func UpdateTodoEndPoint(res http.ResponseWriter, req *http.Request) {
+	res.Header().Set("content-type", "application/json")
+
+	params := mux.Vars(req)
+	id, _ := primitive.ObjectIDFromHex(params["id"])
+
+	collection := client.Database("gotodo").Collection("todos")
+
+	var todo Todo
+	json.NewDecoder(req.Body).Decode(&todo)
+
+	result, err := collection.UpdateOne(context.TODO(), Todo{ID: id}, bson.M{"$set": todo})
+	if err != nil {
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write([]byte(`{ "message": "` + err.Error() + `" }`))
+		return
+	}
+
+	json.NewEncoder(res).Encode(result)
+}
+
 func main() {
 	fmt.Println("Starting...")
 
@@ -112,6 +152,9 @@ func main() {
 	router.HandleFunc("/todo", CreateTodoEndPoint).Methods("POST")
 	router.HandleFunc("/todo", GetAllTodosEndPoint).Methods("GET")
 	router.HandleFunc("/todo/{id}", GetTodoEndpoint).Methods("GET")
+	router.HandleFunc("/todo/{id}", DeleteTodoEndPoint).Methods("DELETE")
+	router.HandleFunc("/todo/{id}", UpdateTodoEndPoint).Methods("PUT")
+	// router.HandleFunc("/todo/{id}/timespent/{tspent}").Methods("POST")
 	log.Fatal(http.ListenAndServe(":12345", router))
 
 }
