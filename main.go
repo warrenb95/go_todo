@@ -181,6 +181,6 @@ func main() {
 	router.HandleFunc("/todo/{id}", DeleteTodoEndPoint).Methods("DELETE")
 	router.HandleFunc("/todo/{id}", UpdateTodoEndPoint).Methods("PUT")
 	router.HandleFunc("/todo/{id}/timespent", TimeSpentEndPoint).Methods("PUT")
-	log.Fatal(http.ListenAndServe(":12345", router))
+	log.Fatal(http.ListenAndServe(":3000", router))
 
 }
