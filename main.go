@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
@@ -23,12 +25,20 @@ type Todo struct {
 }
 
 func IndexHandler(res http.ResponseWriter, req *http.Request) {
-	allTodosRaw, err := http.Get(mongodbURL)
+	resbody, err := http.Get(mongodbURL)
 	if err != nil {
 		// Handke error
 	}
+	defer resbody.Body.Close()
 
-	fmt.Println(allTodosRaw)
+	resbodybytes, err := ioutil.ReadAll(resbody.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var todos []Todo
+	json.Unmarshal(resbodybytes, &todos)
+
 }
 
 func main() {
@@ -38,11 +48,10 @@ func main() {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/", IndexHandler)
-	// router.HandleFunc("/", GetAllTodosEndPoint).Methods("GET")
-	// router.HandleFunc("/{id}", GetTodoEndpoint).Methods("GET")
-	// router.HandleFunc("/{id}", DeleteTodoEndPoint).Methods("DELETE")
-	// router.HandleFunc("/{id}", UpdateTodoEndPoint).Methods("PUT")
-	// router.HandleFunc("/{id}/timespent", TimeSpentEndPoint).Methods("PUT")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	// router.HandleFunc("/{id}", TodoDetail)
+	// router.HandleFunc("/{id}", DeleteTodoEndPoint)
+	// router.HandleFunc("/{id}", UpdateTodoEndPoint)
+	// router.HandleFunc("/{id}/timespent", TimeSpentEndPoint)
+	log.Fatal(http.ListenAndServe(":80", router))
 
 }
