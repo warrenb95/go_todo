@@ -1,3 +1,15 @@
+{{define "index"}}
 {{template "header"}}
-    
+    <h1>Go Todo</h1>
+
+    <a href="http://localhost/newtodo">New Todo</a>
+
+    <table>
+        {{range .Todos}}
+            <tr>
+                <td>{{.Title}}</td>
+            </tr>
+        {{end}}
+    </table>
 {{template "footer"}}
+{{end}}
