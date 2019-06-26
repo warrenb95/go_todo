@@ -2,12 +2,13 @@
 {{template "header"}}
     <h1>Go Todo</h1>
 
-    <a href="http://localhost/newtodo">New Todo</a>
+    <a href="/newtodo">New Todo</a>
 
     <table>
         {{range .Todos}}
             <tr>
-                <td>{{.Title}}</td>
+                <td><a href="/{{.ID.Hex}}">{{.Title}}</a></td>
+                <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
             </tr>
         {{end}}
     </table>

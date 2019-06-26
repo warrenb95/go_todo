@@ -34,6 +34,8 @@ type IndexPageData struct {
 	Todos []Todo
 }
 
+var client *http.Client = &http.Client{}
+
 func IndexHandler(res http.ResponseWriter, req *http.Request) {
 	resbody, err := http.Get(mongodbURL)
 	if err != nil {
@@ -69,7 +71,7 @@ func CreateNewTodoHandler(res http.ResponseWriter, req *http.Request) {
 		req.ParseForm()
 
 		estimate, err := strconv.ParseInt(req.Form["estimate"][0], 10, 64)
-		if err == nil {
+		if err != nil {
 			fmt.Printf("%d of type %T", estimate, estimate)
 		}
 
@@ -93,7 +95,67 @@ func CreateNewTodoHandler(res http.ResponseWriter, req *http.Request) {
 
 		createtodoresp.Body.Close()
 
-		http.Redirect(res, req, gotodoURL, http.StatusSeeOther)
+		http.Redirect(res, req, gotodoURL, http.StatusTemporaryRedirect)
+	}
+}
+
+func DeleteTodoEndPoint(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	id, _ := params["id"]
+
+	mongodbDeleteURL := mongodbURL + "/" + id
+
+	// Create request
+	deleteReq, err := http.NewRequest("DELETE", mongodbDeleteURL, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Fetch Request
+	resp, err := client.Do(deleteReq)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	http.Redirect(res, req, gotodoURL, http.StatusTemporaryRedirect)
+}
+
+func TodoDetail(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	id, _ := params["id"]
+
+	todoDetailURL := mongodbURL + "/" + id
+
+	// Create request
+	getReq, err := http.NewRequest("GET", todoDetailURL, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Fetch Request
+	resp, err := client.Do(getReq)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	resbodybytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var todo Todo
+	json.Unmarshal(resbodybytes, &todo)
+
+	err = templates.ExecuteTemplate(res, "detail", todo)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -105,9 +167,9 @@ func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", IndexHandler)
 	router.HandleFunc("/newtodo", CreateNewTodoHandler)
-	// router.HandleFunc("/{id}", TodoDetail)
-	// router.HandleFunc("/{id}", DeleteTodoEndPoint)
-	// router.HandleFunc("/{id}", UpdateTodoEndPoint)
+	router.HandleFunc("/{id}/delete", DeleteTodoEndPoint)
+	router.HandleFunc("/{id}", TodoDetail)
+	// router.HandleFunc("/{id}/update", UpdateTodoEndPoint)
 	// router.HandleFunc("/{id}/timespent", TimeSpentEndPoint)
 	log.Fatal(http.ListenAndServe(":80", router))
 

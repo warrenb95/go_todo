@@ -1,0 +1,20 @@
+{{define "detail"}}
+{{template "header"}}
+    <h1>{{.Title}}</h1>
+
+    <td><a href="/">Home</a></td>
+
+    <table>
+        <tr>
+            <td>{{.Desc}}</td>
+        </tr>
+        <tr>
+            <td>{{.Estimate}}</td>
+        </tr>
+        <tr>
+            <td>{{.TimeSpent}}</td>
+        </tr>
+        <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
+    </table>
+{{template "footer"}}
+{{end}}
