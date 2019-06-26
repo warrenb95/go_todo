@@ -6,15 +6,23 @@
 
     <table>
         <tr>
-            <td>{{.Desc}}</td>
+            <td>Desc: {{.Desc}}</td>
         </tr>
         <tr>
-            <td>{{.Estimate}}</td>
+            <td>Estimate: {{.Estimate}}</td>
         </tr>
         <tr>
-            <td>{{.TimeSpent}}</td>
+            <td>Time spent: {{.TimeSpent}}</td>
         </tr>
-        <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
+        <tr>
+            <td><a href="/{{.ID.Hex}}/update">Update</a></td>
+        </tr>
+        <tr>
+            <td><a href="/{{.ID.Hex}}/timespent">add time spent on task</a></td>
+        </tr>
+        <tr>
+            <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
+        </tr>
     </table>
 {{template "footer"}}
 {{end}}

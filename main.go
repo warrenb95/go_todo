@@ -75,7 +75,7 @@ func CreateNewTodoHandler(res http.ResponseWriter, req *http.Request) {
 			fmt.Printf("%d of type %T", estimate, estimate)
 		}
 
-		var todo Todo = Todo{
+		var todo = Todo{
 			Title:     req.Form["title"][0],
 			Desc:      req.Form["description"][0],
 			Estimate:  estimate,
@@ -88,12 +88,18 @@ func CreateNewTodoHandler(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		createtodoresp, err := http.Post(mongodbURL, "application/json", bytes.NewBuffer(todojson))
+		createtodoreq, err := http.NewRequest("POST", mongodbURL, bytes.NewBuffer(todojson))
 		if err != nil {
 			log.Fatalln(err)
 		}
+		createtodoreq.Header.Set("Content-Type", "application/json")
 
-		createtodoresp.Body.Close()
+		resp, err := client.Do(createtodoreq)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer resp.Body.Close()
 
 		http.Redirect(res, req, gotodoURL, http.StatusTemporaryRedirect)
 	}
@@ -159,6 +165,156 @@ func TodoDetail(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func UpdateTodoEndPoint(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	id, _ := params["id"]
+
+	todoDetailURL := mongodbURL + "/" + id
+
+	// Create request
+	getReq, err := http.NewRequest("GET", todoDetailURL, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Fetch Request
+	resp, err := client.Do(getReq)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	resbodybytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var todo Todo
+	json.Unmarshal(resbodybytes, &todo)
+
+	if req.Method == "GET" {
+		err := templates.ExecuteTemplate(res, "update", todo)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		req.ParseForm()
+
+		estimate, err := strconv.ParseInt(req.Form["estimate"][0], 10, 64)
+		if err != nil {
+			fmt.Printf("%d of type %T", estimate, estimate)
+		}
+
+		var updatedtodo = Todo{
+			Title:    req.Form["title"][0],
+			Desc:     req.Form["description"][0],
+			Estimate: estimate,
+		}
+
+		todojson, err := json.Marshal(updatedtodo)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// Create request
+		putReq, err := http.NewRequest("PUT", todoDetailURL, bytes.NewBuffer(todojson))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		putReq.Header.Set("Content-Type", "application/json")
+
+		// Fetch Request
+		updateresp, err := client.Do(putReq)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer updateresp.Body.Close()
+
+		http.Redirect(res, req, gotodoURL+"/"+id, http.StatusTemporaryRedirect)
+	}
+}
+
+func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
+	params := mux.Vars(req)
+	id, _ := params["id"]
+
+	todoDetailURL := mongodbURL + "/" + id
+
+	// Create request
+	getReq, err := http.NewRequest("GET", todoDetailURL, nil)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Fetch Request
+	resp, err := client.Do(getReq)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer resp.Body.Close()
+
+	resbodybytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var todo Todo
+	json.Unmarshal(resbodybytes, &todo)
+
+	if req.Method == "GET" {
+		err := templates.ExecuteTemplate(res, "timespent", todo)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		req.ParseForm()
+
+		timespent, err := strconv.ParseInt(req.Form["timespent"][0], 10, 64)
+		if err != nil {
+			fmt.Printf("%d of type %T", timespent, timespent)
+		}
+
+		var updatedtodo = Todo{
+			TimeSpent: todo.TimeSpent + timespent,
+		}
+
+		todojson, err := json.Marshal(updatedtodo)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		// Create request
+		putReq, err := http.NewRequest("PUT", todoDetailURL, bytes.NewBuffer(todojson))
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		putReq.Header.Set("Content-Type", "application/json")
+
+		// Fetch Request
+		updateresp, err := client.Do(putReq)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer updateresp.Body.Close()
+
+		http.Redirect(res, req, gotodoURL+"/"+id, http.StatusTemporaryRedirect)
+	}
+}
+
 func main() {
 	fmt.Println("Starting...")
 
@@ -169,8 +325,7 @@ func main() {
 	router.HandleFunc("/newtodo", CreateNewTodoHandler)
 	router.HandleFunc("/{id}/delete", DeleteTodoEndPoint)
 	router.HandleFunc("/{id}", TodoDetail)
-	// router.HandleFunc("/{id}/update", UpdateTodoEndPoint)
-	// router.HandleFunc("/{id}/timespent", TimeSpentEndPoint)
+	router.HandleFunc("/{id}/update", UpdateTodoEndPoint)
+	router.HandleFunc("/{id}/timespent", TimeSpentEndPoint)
 	log.Fatal(http.ListenAndServe(":80", router))
-
 }
