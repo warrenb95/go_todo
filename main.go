@@ -18,7 +18,7 @@ import (
 const gotodoURL string = "http://localhost/"
 const mongodbURL string = "http://localhost:3000/todo"
 
-var templates = template.Must(template.ParseGlob("templates/*"))
+var templates = template.Must(template.ParseGlob("templates/*.html"))
 
 type Todo struct {
 	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
@@ -36,7 +36,7 @@ type IndexPageData struct {
 
 var client *http.Client = &http.Client{}
 
-func IndexHandler(res http.ResponseWriter, req *http.Request) {
+func IndexEndPoint(res http.ResponseWriter, req *http.Request) {
 	resbody, err := http.Get(mongodbURL)
 	if err != nil {
 		// Handke error
@@ -60,7 +60,7 @@ func IndexHandler(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func CreateNewTodoHandler(res http.ResponseWriter, req *http.Request) {
+func CreateNewTodoEndPoint(res http.ResponseWriter, req *http.Request) {
 	if req.Method == "GET" {
 		err := templates.ExecuteTemplate(res, "newtodo", nil)
 		if err != nil {
@@ -129,7 +129,7 @@ func DeleteTodoEndPoint(res http.ResponseWriter, req *http.Request) {
 	http.Redirect(res, req, gotodoURL, http.StatusTemporaryRedirect)
 }
 
-func TodoDetail(res http.ResponseWriter, req *http.Request) {
+func TodoDetailEndPoint(res http.ResponseWriter, req *http.Request) {
 	params := mux.Vars(req)
 	id, _ := params["id"]
 
@@ -315,16 +315,40 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func DisplayOverviewEndPoint(res http.ResponseWriter, req *http.Request) {
+	resbody, err := http.Get(mongodbURL)
+	if err != nil {
+		// Handke error
+	}
+	defer resbody.Body.Close()
+
+	resbodybytes, err := ioutil.ReadAll(resbody.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var todos []Todo
+	json.Unmarshal(resbodybytes, &todos)
+
+	data := IndexPageData{Todos: todos}
+
+	err = templates.ExecuteTemplate(res, "overview", data)
+	if err != nil {
+		http.Error(res, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}
+
 func main() {
 	fmt.Println("Starting...")
 
 	fmt.Println("Connected to go todo!")
 
 	router := mux.NewRouter()
-	router.HandleFunc("/", IndexHandler)
-	router.HandleFunc("/newtodo", CreateNewTodoHandler)
+	router.HandleFunc("/", IndexEndPoint)
+	router.HandleFunc("/newtodo", CreateNewTodoEndPoint)
 	router.HandleFunc("/{id}/delete", DeleteTodoEndPoint)
-	router.HandleFunc("/{id}", TodoDetail)
+	router.HandleFunc("/{id}", TodoDetailEndPoint)
 	router.HandleFunc("/{id}/update", UpdateTodoEndPoint)
 	router.HandleFunc("/{id}/timespent", TimeSpentEndPoint)
 	log.Fatal(http.ListenAndServe(":80", router))

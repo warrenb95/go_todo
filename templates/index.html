@@ -8,6 +8,7 @@
         {{range .Todos}}
             <tr>
                 <td><a href="/{{.ID.Hex}}">{{.Title}}</a></td>
+                <td>Time spent so far: {{.TimeSpent}}</td>
                 <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
             </tr>
         {{end}}
