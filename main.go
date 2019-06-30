@@ -23,6 +23,13 @@ var templates = template.Must(template.ParseGlob("templates/*.html"))
 type Timespent struct {
 	Duration int64     `json:"timespent,omitempty" bson:"timespent,omitempty"`
 	Date     time.Time `json:"timecreated,omitempty" bson:"timecreated,omitempty"`
+	Desc     string    `json:"desc,omitempty" bson:"desc,omitempty"`
+}
+
+func (t Timespent) FormatAsDate() string {
+	d := t.Date
+	year, month, day := d.Date()
+	return fmt.Sprintf("%d-%d-%d", day, month, year)
 }
 
 type Todo struct {
@@ -290,7 +297,9 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 			fmt.Printf("%d of type %T", todoTimespent, todoTimespent)
 		}
 
-		updatedTimespent := append(todo.TimeSpent, Timespent{Duration: todoTimespent, Date: time.Now()})
+		updatedTimespent := append(todo.TimeSpent, Timespent{Duration: todoTimespent,
+			Date: time.Now(),
+			Desc: req.Form["desc"][0]})
 
 		var updatedtodo = Todo{
 			TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,
