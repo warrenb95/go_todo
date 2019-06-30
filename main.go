@@ -20,14 +20,20 @@ const mongodbURL string = "http://localhost:3000/todo"
 
 var templates = template.Must(template.ParseGlob("templates/*.html"))
 
+type Timespent struct {
+	Duration int64     `json:"timespent,omitempty" bson:"timespent,omitempty"`
+	Date     time.Time `json:"timecreated,omitempty" bson:"timecreated,omitempty"`
+}
+
 type Todo struct {
-	ID          primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
-	Title       string             `json:"title,omitempty" bson:"title,omitempty"`
-	Desc        string             `json:"desc,omitempty" bson:"desc,omitempty"`
-	TimeCreated time.Time          `json:"timecreated,omitempty" bson:"timecreated,omitempty"`
-	Deadline    time.Time          `json:"deadline,omitempty" bson:"deadline,omitempty"`
-	Estimate    int64              `json:"estimate,omitempty" bson:"estimate,omitempty"`
-	TimeSpent   int64              `json:"timespent,omitempty" bson:"timespent,omitempty"`
+	ID             primitive.ObjectID `json:"_id,omitempty" bson:"_id,omitempty"`
+	Title          string             `json:"title,omitempty" bson:"title,omitempty"`
+	Desc           string             `json:"desc,omitempty" bson:"desc,omitempty"`
+	TimeCreated    time.Time          `json:"timecreated,omitempty" bson:"timecreated,omitempty"`
+	Deadline       time.Time          `json:"deadline,omitempty" bson:"deadline,omitempty"`
+	Estimate       int64              `json:"estimate,omitempty" bson:"estimate,omitempty"`
+	TotalTimeSpent int64              `json:"totaltimespent,omitempty" bson:"totaltimespent,omitempty"`
+	TimeSpent      []Timespent        `json:"timespent,omitempty" bson:"timespent,omitempty"`
 }
 
 type IndexPageData struct {
@@ -76,10 +82,10 @@ func CreateNewTodoEndPoint(res http.ResponseWriter, req *http.Request) {
 		}
 
 		var todo = Todo{
-			Title:     req.Form["title"][0],
-			Desc:      req.Form["description"][0],
-			Estimate:  estimate,
-			TimeSpent: 0,
+			Title:          req.Form["title"][0],
+			Desc:           req.Form["description"][0],
+			Estimate:       estimate,
+			TotalTimeSpent: 0,
 		}
 
 		todojson, err := json.Marshal(todo)
@@ -279,13 +285,16 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 	} else {
 		req.ParseForm()
 
-		timespent, err := strconv.ParseInt(req.Form["timespent"][0], 10, 64)
+		todoTimespent, err := strconv.ParseInt(req.Form["timespent"][0], 10, 64)
 		if err != nil {
-			fmt.Printf("%d of type %T", timespent, timespent)
+			fmt.Printf("%d of type %T", todoTimespent, todoTimespent)
 		}
 
+		updatedTimespent := append(todo.TimeSpent, Timespent{Duration: todoTimespent, Date: time.Now()})
+
 		var updatedtodo = Todo{
-			TimeSpent: todo.TimeSpent + timespent,
+			TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,
+			TimeSpent:      updatedTimespent,
 		}
 
 		todojson, err := json.Marshal(updatedtodo)
