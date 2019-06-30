@@ -1,18 +1,25 @@
 {{define "newtodo"}}
 {{template "header"}}
-    <h1>New Todo</h1>
+    <div class="container">
+        <h1>New Todo</h1>
 
-    <form action="/newtodo" method="POST">
-        <label for="title">Title:</label>
-        <input type="text" name="title">
-
-        <label for="description">Desc:</label>
-        <input type="text" name="description">
-
-        <label for="estimate">Estimate (minutes):</label>
-        <input type="number" name="estimate">
-
-        <input type="submit" value="Go Todo">
-    </form>
+        <form action="/newtodo" method="POST">
+            <div class="form-row mt-4">
+                <div class="col">
+                    <input type="text" class="form-control" name="title" placeholder="Go todo title">
+                </div>
+                
+                <div class="col">
+                    <input type="number" class="form-control" name="estimate" placeholder="Estimate (minutes)">
+                </div>
+            </div>
+                
+            <div class="form-row my-4">
+                <textarea class="form-control" name="description" placeholder="Go to description" rows="5"></textarea>
+            </div>
+    
+            <button type="submit" class="btn btn-primary w-100">Go todo</button>
+        </form>
+    </div>  
 {{template "footer"}}
 {{end}}

@@ -299,7 +299,7 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 
 		updatedTimespent := append(todo.TimeSpent, Timespent{Duration: todoTimespent,
 			Date: time.Now(),
-			Desc: req.Form["desc"][0]})
+			Desc: req.Form["description"][0]})
 
 		var updatedtodo = Todo{
 			TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,

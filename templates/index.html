@@ -1,17 +1,18 @@
 {{define "index"}}
 {{template "header"}}
-    <h1>Go Todo</h1>
-
-    <a href="/newtodo">New Todo</a>
-
-    <table>
-        {{range .Todos}}
-            <tr>
-                <td><a href="/{{.ID.Hex}}">{{.Title}}</a></td>
-                <td>Time spent so far: {{.TotalTimeSpent}}</td>
-                <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
-            </tr>
-        {{end}}
-    </table>
+    <div class="container">
+            <h1>Todos</h1>
+        
+            <table class="table">
+                {{range .Todos}}
+                    <tr>
+                        <th scope="row"><a href="/{{.ID.Hex}}">{{.Title}}</a></th>
+                        <td>Worked on for {{.TotalTimeSpent}} minutes</td>
+                        <td><a class="btn btn-danger" href="/{{.ID.Hex}}/delete">Delete</a></td>
+                    </tr>
+                {{end}}
+            </table>
+    </div>
+    
 {{template "footer"}}
 {{end}}

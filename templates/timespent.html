@@ -1,16 +1,22 @@
 {{define "timespent"}}
 {{template "header"}}
-    <h1>Update time spent for {{.Title}}</h1>
+    <div class="container">
+        <h1>Add time to - {{.Title}}</h1>
 
-    <form action="/{{.ID.Hex}}/timespent" method="POST">
+        <form action="/{{.ID.Hex}}/timespent" method="POST">
+            
+            <div class="form-group">
 
-        <label for="timespent">Estimate (minutes):</label>
-        <input type="number" name="timespent">
+                <input type="text" class="form-control mt-3" name="timespent" placeholder="Time spent">
 
-        <label for="desc">Description: </label>
-        <input type="text" name="desc">
+                <textarea class="form-control my-3" name="description" placeholder="Go to description" rows="5"></textarea>
 
-        <input type="submit" value="Update time spent">
-    </form>
+            </div>
+    
+            <button type="submit" class="btn btn-primary w-100">Update</button>
+
+        </form>
+
+    </div>  
 {{template "footer"}}
 {{end}}

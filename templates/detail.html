@@ -1,39 +1,46 @@
 {{define "detail"}}
 {{template "header"}}
-    <h1>{{.Title}}</h1>
+    <div class="container">
+        <h1>{{.Title}}</h1>
 
-    <a href="/">Home</a>
+        <a class="btn btn-primary" href="/{{.ID.Hex}}/update">Update</a>
+        <a class="btn btn-danger" href="/{{.ID.Hex}}/delete">Delete</a>
 
-    <table>
-        <tr>
-            <td>Desc: {{.Desc}}</td>
-        </tr>
-        <tr>
-            <td>Estimate: {{.Estimate}}</td>
-            <td>Time spent: {{.TotalTimeSpent}}</td>
-        </tr>
-        <tr>
-            <td><a href="/{{.ID.Hex}}/timespent">add time spent on task</a></td>
-        </tr>
-        <tr>
-            <td><a href="/{{.ID.Hex}}/update">Update</a></td>
-            <td><a href="/{{.ID.Hex}}/delete">Delete</a></td>
-        </tr>
-    </table>
+        <div class="row my-5 align-items-center">
+            <div class="col-8 align-self-center">
+                Desc: {{.Desc}}
+            </div>
+            <div class="col align-self-center">
+                <div class="row align-items-center">
+                    <div class="col align-self-center">
+                        Estimate: {{.Estimate}}
+                    </div>
+                </div>
+                <div class="row align-items-center">
+                    <div class="col align-self-center">
+                        Time spent: {{.TotalTimeSpent}}
+                    </div>
+                    <div class="col align-self-center">
+                            <a class="btn btn-success" href="/{{.ID.Hex}}/timespent">Add time</a>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <table>
-        <tr>
-            <th>Time spent</th>
-            <th>Date</th>
-            <th>What did you do</th>
-        </tr>
-        {{range .TimeSpent}}
+        <table class="table">
             <tr>
-                <td>{{.Duration}}</td>
-                <td>{{.FormatAsDate}}</td>
-                <td>{{.Desc}}</td>
+                <th scope="col">Time spent</th>
+                <th scope="col">Date</th>
+                <th scope="col">What did you do</th>
             </tr>
-        {{end}}
-    </table>
+            {{range .TimeSpent}}
+                <tr>
+                    <td>{{.Duration}}</td>
+                    <td>{{.FormatAsDate}}</td>
+                    <td>{{.Desc}}</td>
+                </tr>
+            {{end}}
+        </table>
+    </div>
 {{template "footer"}}
 {{end}}
