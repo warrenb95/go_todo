@@ -65,8 +65,8 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 			Desc: req.Form["description"][0]})
 
 		var updatedtodo = models.Todo{
-			TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,
-			TimeSpent:      updatedTimespent,
+			// TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,
+			TimeSpent: updatedTimespent,
 		}
 
 		todojson, err := json.Marshal(updatedtodo)

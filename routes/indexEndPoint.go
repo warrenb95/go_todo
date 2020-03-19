@@ -2,6 +2,7 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -17,9 +18,10 @@ type IndexPageData struct {
 
 // IndexEndPoint for the home/index page
 func IndexEndPoint(res http.ResponseWriter, req *http.Request) {
-	resbody, err := http.Get(config.MongodbURL)
+	resbody, err := config.Client.Get(config.MongodbURL)
+	fmt.Println(resbody.Header)
 	if err != nil {
-		// Handke error
+		log.Fatal(err)
 	}
 	defer resbody.Body.Close()
 

@@ -9,9 +9,8 @@ import (
 var Templates = template.Must(template.ParseGlob("templates/*.html"))
 
 // Url Strings for the app
-const GotodoURL string = "http://localhost/"
-const MongodbURL string = "http://localhost:3000/todo"
+const GotodoURL string = "http://localhost"
+const MongodbURL string = "http://mongo_todo:3000/todo"
 
-// The http.client pointer
-// var client *http.Client = &http.Client{}
+// Client http.client pointer
 var Client = &http.Client{}
