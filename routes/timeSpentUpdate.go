@@ -23,6 +23,9 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 	// Set the correct URL for the Todo ID
 	todoDetailURL := config.MongodbURL + "/" + id
 
+	// PUT request URL
+	timeSpentURL := todoDetailURL + "/timespent"
+
 	// Create request
 	getReq, err := http.NewRequest("GET", todoDetailURL, nil)
 	if err != nil {
@@ -60,13 +63,15 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 			fmt.Printf("%d of type %T", todoTimespent, todoTimespent)
 		}
 
-		updatedTimespent := append(todo.TimeSpent, models.Timespent{Duration: todoTimespent,
-			Date: time.Now(),
-			Desc: req.Form["description"][0]})
+		updatedTimespent := append(todo.TimeSpent, models.Timespent{
+			Duration: todoTimespent,
+			Date:     time.Now(),
+			Desc:     req.Form["description"][0],
+		})
 
 		var updatedtodo = models.Todo{
-			// TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,
-			TimeSpent: updatedTimespent,
+			TotalTimeSpent: todo.TotalTimeSpent + todoTimespent,
+			TimeSpent:      updatedTimespent,
 		}
 
 		todojson, err := json.Marshal(updatedtodo)
@@ -76,7 +81,7 @@ func TimeSpentEndPoint(res http.ResponseWriter, req *http.Request) {
 		}
 
 		// Create request
-		putReq, err := http.NewRequest("PUT", todoDetailURL, bytes.NewBuffer(todojson))
+		putReq, err := http.NewRequest("PUT", timeSpentURL, bytes.NewBuffer(todojson))
 		if err != nil {
 			fmt.Println(err)
 			return
